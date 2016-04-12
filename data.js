@@ -3,97 +3,18 @@ var atcode = "dilema2015",
     teamsData = [],
     results;
 
-Array.prototype.maximum = function() {
-    return this.reduce(function(max, aValue) {
-        return Math.max(max, aValue);
-    }, this[0]);
-};
-Array.prototype.minimum = function() {
-    return this.reduce(function(min, aValue) {
-        return Math.min(min, aValue);
-    }, this[0]);
-};
-Array.prototype.sum = function() {
-    return this.reduce(function(total, aValue) {
-        return total + Number(aValue);
-    });
-};
-
 function toTitleCase(str) {
     return str.replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
 
-(function getTeams() {
-
-})();
-
-function showPollResults2 (data) {
-    var table = $("<table/>");
-
-    var header = $("<tr/>").append($("<th/>").text(" "));
-    var votesRow = $("<tr/>").append($("<td/>").text("Total"));
-    var globalRow = $("<tr/>").append($("<td/>").text("Todos"));
-
-    var total = 0;
-    var correct = -1;
-    var mostVoted = -1;
-    var maxVotes = 0;
-
-    var maxArr = [], minArr = [], maxArrVal = [], minArrVal = [];
-
-    data.answers.forEach(function(anAnswer, index) {
-        total += anAnswer.count;
-        if (maxVotes < anAnswer.count) {
-            maxVotes = anAnswer.count;
-        }
-        maxArr.push([]);
-        minArr.push([]);
-        maxArrVal.push(0);
-        minArrVal.push(100);
-    });
-
-    data.answers.forEach(function(anAnswer, index) {
-        header.append($("<th/>").text(anAnswer.text));
-        votesRow.append($("<td/>").text(anAnswer.count));
-        if (total==0) {
-            globalRow.append($("<td/>").text(0));
-        } else {
-            globalRow.append($("<td/>").text((anAnswer.count/total*100).toFixed(1)+"%"));
-            if (anAnswer.correct) {
-                correct = index;
-                votesRow.find("td").last().addClass("CorrectCol");
-                globalRow.find("td").last().addClass("CorrectCol");
-            }
-            if (maxVotes == anAnswer.count) {
-                mostVoted = index;
-                votesRow.find("td").last().addClass("MostVotedCol");
-                globalRow.find("td").last().addClass("MostVotedCol");
-            }
-        }
-    });
-
-    header.append($("<th/>").text("Total"));
-    votesRow.append($("<td/>").text(total));
-    globalRow.append($("<td/>").text(total));
-
-    table.append(header);
-    table.append(votesRow);
-    table.append(globalRow);
-
-    var tags = [];
-
-    Object.keys(data.userTags).forEach(function (key) {
-
+function getTags(data) {
+    return Object.keys(data.userTags).map(function (key) {
         var temp = data.userTags[key];
-
         temp.key = key;
-
         temp.team = false;
-
         var name = key;
-
         if (key.indexOf("team-") > -1) {
             temp.team = true;
             var temp2 = key.replace("room:team-","");
@@ -104,17 +25,10 @@ function showPollResults2 (data) {
                 }
             };
         }
-
         temp.name = name.replace("room:","");
-
-        temp.total = temp.answers.sum();
-        temp.max = temp.answers.maximum();
-        temp.min = temp.answers.minimum();
-
-        tags.push(temp);
-    });
-
-    tags.sort(function (a,b) {
+        temp.displayName = toTitleCase(temp.name.replace("_"," "))
+        return temp;
+    }).sort(function (a,b) {
         if (a.team != b.team) {
             if (a.team) {
                 return 1;
@@ -125,88 +39,145 @@ function showPollResults2 (data) {
         if(a.name < b.name) return -1;
         if(a.name > b.name) return 1;
         return 0;
-    }).forEach(function(tag, tagindex) {
-        var row = $("<tr/>")
-                .attr("id", "tag-" + tagindex)
-                .append($("<td/>").text(toTitleCase(tag.name.replace("_"," "))));
-
-        tag.answers.forEach(function(anAnswer, index) {
-
-            var percentage = (anAnswer/tag.total*100).toFixed(1) * 1;
-
-            if (maxArrVal[index] == percentage) {
-                maxArr[index].push(tagindex);
-            }
-
-            if (maxArrVal[index] < percentage) {
-                maxArrVal[index] = percentage;
-                maxArr[index] = [tagindex];
-            }
-
-            if (minArrVal[index] == percentage) {
-                minArr[index].push(tagindex);
-            }
-
-            if (minArrVal[index] > percentage) {
-                minArrVal[index] = percentage;
-                minArr[index] = [tagindex];
-            }
-
-
-            if (tag.total == 0) {
-                row.append($("<td/>").text(0));
-            } else {
-                var temp = $("<td/>").text(percentage+"%");
-                if (tag.max == anAnswer) {
-                    temp.addClass("RowMax");
-                } else if (tag.min == anAnswer) {
-                    temp.addClass("RowMin");
-                }
-                if (index == correct) {
-                    temp.addClass("CorrectCol");
-                }
-                if (index == mostVoted) {
-                    temp.addClass("MostVotedCol");
-                }
-
-                row.append(temp);
-            }
-        });
-
-        row.append($("<td/>").text(tag.total));
-
-        table.append(row);
     });
-
-    maxArr.forEach(function (rowindexes, cellindex) {
-        rowindexes.forEach(function(rowindex) {
-            table.find("#tag-" + rowindex + " td").eq(cellindex+1).addClass("ColMax");
-        });
-    });
-
-    minArr.forEach(function (rowindexes, cellindex) {
-        rowindexes.forEach(function(rowindex) {
-            table.find("#tag-" + rowindex + " td").eq(cellindex+1).addClass("ColMin");
-        });
-    });
-
-
-    $("#pollResultsPage .content").remove();
-
-    $("#pollResultsPage")
-        .addClass("background1")
-        .append(
-            $("<div/>")
-                .addClass("content")
-                .append(
-                    $("<h1/>")
-                        .addClass("title")
-                        .text(data.question),
-                    table
-                )
-        );
-
 };
+
+function ellipsis(a) { return a.substr(0, 10).trim() + '...'; }
+
+function showData(answers, groups) {
+    $('#svg').remove();
+    var data = groups[0].answers.map(function(answer0, i) {
+        return {
+            answer: ellipsis(answers[i].text),
+            answer0: answer0,
+            answer1: groups[1].answers[i]
+        }
+    });
+    var margin = {top: 80, right: 80, bottom: 80, left: 80},
+        width = 600 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+    var x = d3.scale.ordinal()
+        .rangeRoundBands([0, width], .1);
+
+    var y0 = d3.scale.linear().domain([0, d3.max(groups[0].answers)]).range([height, 0]),
+    y1 = d3.scale.linear().domain([0, d3.max(groups[1].answers)]).range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxisLeft = d3.svg.axis().scale(y0).ticks(4).orient("left");
+    var yAxisRight = d3.svg.axis().scale(y1).ticks(6).orient("right");
+
+    var svg = d3.select("body").append("svg")
+        .attr("id", "svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("class", "graph")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    x.domain(answers.map(function(a) { return ellipsis(a.text); }));
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis axisLeft")
+        .attr("transform", "translate(0,0)")
+        .call(yAxisLeft)
+      .append("text")
+        .attr("y", 6)
+        .attr("dy", "-2em")
+        .style("text-anchor", "end")
+        .style("text-anchor", "end")
+        .text(groups[0].displayName);
+
+    svg.append("g")
+        .attr("class", "y axis axisRight")
+        .attr("transform", "translate(" + (width) + ",0)")
+        .call(yAxisRight)
+      .append("text")
+        .attr("y", 6)
+        .attr("dy", "-2em")
+        .attr("dx", "2em")
+        .style("text-anchor", "end")
+        .text(groups[1].displayName);
+
+    bars = svg.selectAll(".bar").data(data).enter();
+
+    bars.append("rect")
+        .attr("class", "bar1")
+        .attr("x", function(d) { return x(d.answer); })
+        .attr("width", x.rangeBand()/2)
+        .attr("y", function(d) { return y0(d.answer0); })
+        .attr("height", function(d,i,j) { return height - y0(d.answer0); }); 
+
+    bars.append("rect")
+        .attr("class", "bar2")
+        .attr("x", function(d) { return x(d.answer) + x.rangeBand()/2; })
+        .attr("width", x.rangeBand() / 2)
+        .attr("y", function(d) { return y1(d.answer1); })
+        .attr("height", function(d,i,j) { return height - y1(d.answer1); }); 
+}
+
+function init(data) {
+    var tags = getTags(data);
+    var tagsByDisplayName = {};
+    tags.forEach(function(t) { tagsByDisplayName[t.displayName] = t; });
+
+    $('#question').text(data.question);
+    data.answers.forEach(function(answer) {
+        $('#answers').append($('<li>').text(answer.text));
+    });
+
+    function display() {
+        var selectedTags = $inputs.map(function(i, input) {
+            return tagsByDisplayName[$(input).val()]
+        });
+        if (selectedTags[0] && selectedTags[1]) {
+            showData(data.answers, selectedTags)
+            return true;
+        }
+        return false;
+    }
+
+
+    $('.select-group').addClass('select-group-ready')
+    var $inputs = $('.select-group input')
+        .on('focus', function() {
+            var $this = $(this);
+            $this.autocomplete('search', $this.val());
+        })
+        .on('blur', function() {
+            var $this = $(this);
+            if (!tagsByDisplayName[$this.val()]) {
+                $this.focus();
+                setTimeout(function() {
+                    $this.autocomplete('search', $this.val());
+                });
+            } else if (!display()) {
+                $inputs.not($this).focus();
+            }
+        })
+        .autocomplete({
+            minLength: 0,
+            select: function() {
+                setTimeout(function() {
+                    var $this = $(this);
+                    if (tagsByDisplayName[$this.val()]) {
+                        $this.change().blur();
+                    }
+                }.bind(this), 0);
+            },
+            source: tags.map(function(t) { return t.displayName; })
+        });
+
+    $('#group1').focus();
+}
 
 results = {
     "id": "54f4c8c5226cbdaa0b004e45",
@@ -805,7 +776,6 @@ results = {
 };
 
 $(document).ready(function() {
-    // get Teams and render poll
     $.ajax({
         url: apiHost + "/atcodes/" + atcode + "/teams/",
         success: function (data) {
@@ -813,7 +783,7 @@ $(document).ready(function() {
                 teamsData = data.teams;
             }
 
-            showPollResults2(results);
+            init(results);
         },
         error: function (err) {
             alert("Atcode teams error.\n");

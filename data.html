@@ -1,11 +1,82 @@
 <html>
     <head>
+        <link rel="stylesheet" href="jquery-ui-1.11.4.custom/jquery-ui.min.css">
         <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script src="jquery-ui-1.11.4.custom/jquery-ui.min.js"></script>
+        <script src="http://d3js.org/d3.v3.min.js"></script>
         <script src="data.js"></script>
+        <style>
+        .y.axisRight text {
+            fill: orange;
+        }
+
+        .y.axisLeft text {
+            fill: steelblue;
+        }
+
+        .axis path,
+        .axis line {
+          fill: none;
+          stroke: #000;
+          shape-rendering: crispEdges;
+        }
+
+        .bar1 {
+          fill: steelblue;
+        }
+
+        .bar2 {
+          fill: orange;
+        }
+
+        .x.axis path {
+          display: none;
+        }
+        </style>
+        <style>
+        .ui-autocomplete {
+            max-height: 400px;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .select-group .question,
+        .select-group .answers,
+        .select-group .groups {
+            display: none;
+        }
+        .select-group.select-group-ready .question,
+        .select-group.select-group-ready .answers,
+        .select-group.select-group-ready .groups {
+            display: block;
+        }
+        .select-group .loading {
+            display: block;
+        }
+        .select-group.select-group-ready .loading {
+            display: none;
+        }
+        </style>
     </head>
     <body>
-        <div id="pollResultsPage">
-            <div class="content"></div>
+        <div class="select-group">
+            <div class="loading">
+                Cargando grupos...
+            </div>
+            <div id="question">
+            </div>
+            <ul id="answers">
+            </ul>
+            <div class="groups">
+                Seleccione grupos para comparar sus respuestas<br />
+                <label for="group1" id="label-group1">
+                    Grupo 1:
+                    <input type="text" id="group1">
+                </label>
+                <label for="group2" id="label-group2">
+                    Grupo 2:
+                    <input type="text" id="group2">
+                </label>
+            </div>
         </div>
     </body>
 </html>
